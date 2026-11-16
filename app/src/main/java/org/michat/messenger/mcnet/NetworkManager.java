@@ -83,8 +83,18 @@ public class NetworkManager {
         new Thread(() -> {
             GetLogInResult logInResult = (GetLogInResult) postRestApi("/sendSms", new SendSmsCode(1, 1));
 
-            checkLogInResult(logInResult);
+            if (logInResult.getId() != -1) {
+                checkLogInResult(logInResult);
+            } else {
+                createAccount(logInResult.getSessionToken());
+            }
         }).start();
+    }
+
+    public static void createAccount(String sessionToken) {
+        GetLogInResult logInResult = (GetLogInResult) postRestApi("/sendSms", new CreateAccount("A", "a", sessionToken, 1));
+
+        checkLogInResult(logInResult);
     }
 
     private static boolean checkLogInResult(GetLogInResult logInResult) {
