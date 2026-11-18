@@ -3,8 +3,8 @@ package org.michat.messenger.mcnet;
 public class GetChat extends NetworkObject {
     private final long peerId;
 
-    public GetChat(long peerId, int version) {
-        super(version, "GetChat");
+    public GetChat(long peerId) {
+        super(1, NetworkObjectNames.GET_CHAT_NAME);
 
         this.peerId = peerId;
     }

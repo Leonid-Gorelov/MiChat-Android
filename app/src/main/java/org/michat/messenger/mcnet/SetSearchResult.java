@@ -3,8 +3,8 @@ package org.michat.messenger.mcnet;
 public class SetSearchResult extends NetworkObject {
     private final long peerId;
 
-    public SetSearchResult(long peerId, int version) {
-        super(version, "SetSearchResult");
+    public SetSearchResult(long peerId) {
+        super(1, NetworkObjectNames.SET_SEARCH_RESULT_NAME);
 
         this.peerId = peerId;
     }

@@ -1,26 +1,45 @@
 package org.michat.messenger;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 
 public class StorageManager {
 
-    private static SharedPreferences sharedPreferences;
-    private static Context context;
+    public final String SESSION_TOKEN = "session_token";
+    public final String USER_ID = "user_id";
+    private SharedPreferences sharedPreferences;
 
-    public static void init(Context mainActivity) {
-        context = mainActivity;
-        sharedPreferences = context.getSharedPreferences("michat_prefs", Context.MODE_PRIVATE);
+    public void init(Context mainActivity) {
+        sharedPreferences = mainActivity.getSharedPreferences("michat_prefs", Context.MODE_PRIVATE);
     }
 
-    public static void putString(String key, String value) {
+    public void putString(String key, String value) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(key, value);
         editor.apply();
     }
 
-    public static String getString(String key) {
+    public String getString(String key) {
         return sharedPreferences.getString(key, null);
+    }
+
+    public void putInt(String key, int value) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(key, value);
+        editor.apply();
+    }
+
+    public int getInt(String key) {
+        return sharedPreferences.getInt(key, -1);
+    }
+
+    public void putLong(String key, long value) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putLong(key, value);
+        editor.apply();
+    }
+
+    public long getLong(String key) {
+        return sharedPreferences.getLong(key, -1);
     }
 }

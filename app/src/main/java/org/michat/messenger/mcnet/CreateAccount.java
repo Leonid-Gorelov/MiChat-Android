@@ -5,8 +5,8 @@ public class CreateAccount extends NetworkObject {
     private final String username;
     private final String sessionToken;
 
-    public CreateAccount(String name, String username, String sessionToken, int version) {
-        super(version, "CreateAccount");
+    public CreateAccount(String name, String username, String sessionToken) {
+        super(1, NetworkObjectNames.CREATE_ACCOUNT_NAME);
 
         this.name = name;
         this.username = username;

@@ -4,8 +4,8 @@ public class SetSentMessageId extends NetworkObject {
     private final int tempMessageId;
     private final long messageId;
 
-    public SetSentMessageId(int tempMessageId, long messageId, int version) {
-        super(version, "SetSentMessageId");
+    public SetSentMessageId(int tempMessageId, long messageId) {
+        super(1, NetworkObjectNames.SET_SENT_MESSAGE_ID_NAME);
 
         this.tempMessageId = tempMessageId;
         this.messageId = messageId;

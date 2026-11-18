@@ -8,8 +8,8 @@ public class ChatMessage extends NetworkObject {
     private final Attachment[] attachments;
     private final long date;
 
-    public ChatMessage(String text, long senderId, long targetPeerId, long messageId, Attachment[] attachments, long date, int version) {
-        super(version, "ChatMessage");
+    public ChatMessage(String text, long senderId, long targetPeerId, long messageId, Attachment[] attachments, long date) {
+        super(1, NetworkObjectNames.CHAT_MESSAGE_NAME);
 
         this.text = text;
         this.senderId = senderId;

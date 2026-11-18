@@ -5,8 +5,8 @@ public class GetLogInResult extends NetworkObject {
     private final String sessionToken;
     private final int resultCode;
 
-    public GetLogInResult(long id, String sessionToken, int resultCode, int version) {
-        super(version, "GetLogInResult");
+    public GetLogInResult(long id, String sessionToken, int resultCode) {
+        super(1, NetworkObjectNames.GET_LOG_IN_RESULT_TEXT);
 
         this.id = id;
         this.sessionToken = sessionToken;

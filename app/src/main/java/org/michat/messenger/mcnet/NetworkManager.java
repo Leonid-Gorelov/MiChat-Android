@@ -9,31 +9,28 @@ import org.michat.messenger.GsonParser;
 import org.michat.messenger.StorageManager;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import okhttp3.*;
 import okio.ByteString;
 
 public class NetworkManager {
-    private static String webSockerUrl = "wss://echo.websocket.org";
-    private static String restApiUrl = "https://url.ru";
-    private static OkHttpClient okHttpClient = new OkHttpClient();
-    private static WebSocket webSocket;
+    private String webSockerUrl = "wss://echo.websocket.org";
+    private String restApiUrl = "https://url.ru";
+    private OkHttpClient okHttpClient = new OkHttpClient();
+    private WebSocket webSocket;
+    private Map<String, IUpdateListener> updateListeners = new ConcurrentHashMap<>();
+    private AuthController authController;
+    private StorageManager storageManager;
 
-    public static void init() {
-        if (StorageManager.getString("sessionToken") != null) {
-            new Thread(() -> {
-                GetLogInResult logInResult = (GetLogInResult) postRestApi("/sendUser", new User(1, "", 1));
-                boolean needToPhoneLogIn = !checkLogInResult(logInResult);
-
-                if (needToPhoneLogIn) {
-                    sendPhoneNumber();
-                    sendSmsCode();
-                }
-            }).start();
-        }
+    public void init(AuthController authController, StorageManager storageManager) {
+        this.authController = authController;
+        this.storageManager = storageManager;
     }
 
-    private static void startWs() {
+    private void startWs() {
         Request webSocketRequest = new Request.Builder().url(webSockerUrl).build();
 
         webSocket = okHttpClient.newWebSocket(webSocketRequest, new WebSocketListener() {
@@ -47,6 +44,14 @@ public class NetworkManager {
             public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
                 Log.d("app", "Message text");
                 super.onMessage(webSocket, text);
+
+                Update update = (Update) GsonParser.fromJson(text, Update.class);
+
+                update.getNetworkObjects().forEach((networkObject -> {
+                    IUpdateListener listener = updateListeners.get(networkObject.getType());
+
+                    listener.onMessage(networkObject);
+                }));
             }
 
             @Override
@@ -73,32 +78,46 @@ public class NetworkManager {
         });
     }
 
-    public static void sendPhoneNumber() {
+    public void addUpdateListener(String type, IUpdateListener listener) {
+        updateListeners.put(type, listener);
+    }
+
+    public void sendPhoneNumber(SendPhoneNumber sendPhoneNumber) {
         new Thread(() -> {
-            postRestApi("/sendPhone", new SendPhoneNumber("+7", 1));
+            postRestApi("/sendPhone", sendPhoneNumber);
         }).start();
     }
 
-    public static void sendSmsCode() {
+    public void sendSmsCode(SendSmsCode sendSmsCode) {
         new Thread(() -> {
-            GetLogInResult logInResult = (GetLogInResult) postRestApi("/sendSms", new SendSmsCode(1, 1));
+            GetLogInResult logInResult = (GetLogInResult) postRestApi("/sendSms", sendSmsCode);
 
             if (logInResult.getId() != -1) {
                 checkLogInResult(logInResult);
-            } else {
-                createAccount(logInResult.getSessionToken());
             }
         }).start();
     }
 
-    public static void createAccount(String sessionToken) {
-        GetLogInResult logInResult = (GetLogInResult) postRestApi("/sendSms", new CreateAccount("A", "a", sessionToken, 1));
+    public void sendUser(User user) {
+        if (storageManager.getString(storageManager.SESSION_TOKEN) != null) {
+            new Thread(() -> {
+                GetLogInResult logInResult = (GetLogInResult) postRestApi("/sendUser", user);
+                boolean needToPhoneLogIn = !checkLogInResult(logInResult);
+
+                authController.setIsLogin(!needToPhoneLogIn);
+            }).start();
+        }
+    }
+
+    public void createAccount(CreateAccount createAccount) {
+        GetLogInResult logInResult = (GetLogInResult) postRestApi("/createAccount", createAccount);
 
         checkLogInResult(logInResult);
     }
 
-    private static boolean checkLogInResult(GetLogInResult logInResult) {
+    private boolean checkLogInResult(GetLogInResult logInResult) {
         if (logInResult.getResultCode() == 200) {
+            authController.setIsLogin(true);
             startWs();
             return true;
         } else {
@@ -106,7 +125,7 @@ public class NetworkManager {
         }
     }
 
-    public static NetworkObject postRestApi(String endpoint, NetworkObject networkObject) {
+    public NetworkObject postRestApi(String endpoint, NetworkObject networkObject) {
         String json = GsonParser.toJson(networkObject);
         RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), json);
 
@@ -131,7 +150,7 @@ public class NetworkManager {
         return null;
     }
 
-    public static void sendWs(NetworkObject networkObject) {
+    public void sendWs(NetworkObject networkObject) {
         webSocket.send(GsonParser.toJson(networkObject));
     }
 }
